@@ -1,0 +1,87 @@
+CONTROL BLOCK
+========
+
+offs   len 
+0x000  0x01  flags? initialized to 0
+0x001  0x01  flags? initialized to 0
+0x002  0x01  flags? initialized to 1
+0x003  0x01  flags? initialized to 0
+0x004  0x04  rx base
+0x008  0x04  rx size
+0x00c  0x04  ptr to rpc_ctrl_list
+0x010  0x04  ptr to rpc_data_list
+0x014  0x04  ptr to modem_descriptor
+0x018  0x04  ptr to trace
+
+0x020  0x20  modem_descriptor
+0x020  0x04  version
+0x024  0x04  addr_ctrl
+0x028  0x04  addr_data
+
+0x040  0x04  trace size
+0x044  0x04  trace base  
+
+0x060  0x44  rpc_ctrl_list
+0x060  0x04  size?
+0x064  0x04*n entries?
+
+0x0a4  0x44  rpc_data_list
+0x0a4  0x04  size?
+0x0a8  0x04*n entries?
+
+0x0e8 0x200  rpc_ctrl_buf
+0x2e8 0x200  rpc_data_buf
+
+Startup sequence
+==========
+
+- init control block
+- IPC GPMEM[0] = ptr to control block
+- IPC GPMEM[1] = 0
+- LTEMODEM.STARTN
+
+IPC channels
+==========
+
+incoming:
+
+0: incoming status at GPMEM[1]
+    0x0000: shutdown, init_status=0xe, fault 0xe
+    0x0001: shutdown, init_status=0xe, fault 0xe
+    0x0002: shutdown, init_status=0xe, fault 0xe
+    0x3032: init_status = 0x05
+    0x8001: shutdown, init_status = 0x16
+    0x8002: init_status = 0x5f
+    0x8003: init_status = 0x0c
+2: 
+    if ready, set the app irq
+    else
+     - read modem_descriptor.addr_ctrl
+     - read modem_descriptor.addr_data
+     - become ready
+4: incoming, set app irq
+6: ipc_transport_state = HANDSHAKING
+7: trace
+
+outgoing: 
+
+1: ctrl message sent
+3: data message sent
+5: ??
+
+
+RPC message IDs
+- Control:
+    - 0x0001_xxxx: ??, no free
+    - 0x0002_xxxx: peer data free
+    - 0x0003_xxxx: request shutdown
+    - 0x0004_xxxx: ??, no free
+- Data
+    - 0xxxxx_0003: AT
+        - 0x0001_0003: AT command request
+        - 0x0002_0003: AT command request ACK
+        - 0x0003_0003: AT command response
+        - 0x0004_0003: AT notification (unsolicited message)
+    - 0xxxxx_0004: IP
+    - 0xxxxx_0006: DFU
+    - 0xxxxx_0007: GNSS
