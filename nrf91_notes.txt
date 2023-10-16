@@ -53,13 +53,8 @@ incoming:
     0x8001: shutdown, init_status = 0x16
     0x8002: init_status = 0x5f
     0x8003: init_status = 0x0c
-2: 
-    if ready, set the app irq
-    else
-     - read modem_descriptor.addr_ctrl
-     - read modem_descriptor.addr_data
-     - become ready
-4: incoming, set app irq
+2: ctrl message received
+4: data message received
 6: ipc_transport_state = HANDSHAKING
 7: trace
 
