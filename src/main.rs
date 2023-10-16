@@ -29,7 +29,6 @@ async fn main(_spawner: Spawner) {
     let mut led = Output::new(p.P0_02, Level::Low, OutputDrive::Standard);
     led.set_high();
 
-    /*
     let spu = unsafe { &*pac::SPU::ptr() };
     info!("Setting all RAM as nonsecure...");
     for i in 0..32 {
@@ -42,7 +41,9 @@ async fn main(_spawner: Spawner) {
             w
         })
     }
-     */
+
+    spu.periphid[42].perm.write(|w| w.secattr().non_secure());
+    info!("spu ipc perm: {:08x}", spu.periphid[42].perm.read().bits());
 
     let mut modem = Modem::new();
 
@@ -70,7 +71,7 @@ struct Modem {
 
 impl Modem {
     pub fn new() -> Self {
-        let ipc = unsafe { &*pac::IPC::ptr() };
+        let ipc = unsafe { &*nrf9160_pac::IPC_NS::ptr() };
         let power = unsafe { &*pac::POWER::ptr() };
 
         let mut cb = unsafe {
@@ -109,7 +110,8 @@ impl Modem {
         // POWER.LTEMODEM.STARTN = 0
         // The reg is missing in the PAC??
         // NOTE: 0x4xxx for NS, 0x5xxx for S
-        let startn = 0x4000_5610 as *mut u32;
+        //let startn = 0x4000_5610 as *mut u32;
+        let startn = 0x5000_5610 as *mut u32;
         unsafe {
             info!("startn = {}", startn.read_volatile());
             startn.write_volatile(0);
@@ -207,7 +209,7 @@ impl Modem {
 
         fence(Ordering::SeqCst);
 
-        let ipc = unsafe { &*pac::IPC::ptr() };
+        let ipc = unsafe { &*nrf9160_pac::IPC_NS::ptr() };
         ipc.tasks_send[1].write(|w| unsafe { w.bits(1) });
     }
 
@@ -234,7 +236,7 @@ impl Modem {
 
         fence(Ordering::SeqCst);
 
-        let ipc = unsafe { &*pac::IPC::ptr() };
+        let ipc = unsafe { &*nrf9160_pac::IPC_NS::ptr() };
         ipc.tasks_send[1].write(|w| unsafe { w.bits(1) });
     }
 }
