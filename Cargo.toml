@@ -4,14 +4,17 @@ edition = "2018"
 name = "embassy-nrf-examples"
 version = "0.1.0"
 
+[features]
+default = ["defmt"]
 
 [dependencies]
 embassy-executor = { version = "0.3.0", path = "../embassy/embassy-executor", features = ["nightly", "defmt", "arch-cortex-m", "executor-thread"] }
 embassy-time = { version = "0.1.0", path = "../embassy/embassy-time", features = ["nightly", "defmt", "defmt-timestamp-uptime"] }
 embassy-nrf = { version = "0.1.0", path = "../embassy/embassy-nrf", features = ["nightly", "defmt", "nrf9160-s", "time-driver-rtc1", "gpiote", "unstable-pac"] }
 embassy-sync = { version = "0.3.0", path = "../embassy/embassy-sync", features = ["nightly", "defmt"] }
+embassy-net-driver-channel = { version = "0.1.0", path = "../embassy/embassy-net-driver-channel"}
 
-defmt = "0.3"
+defmt = { version = "0.3", optional = true }
 defmt-rtt = "0.4"
 
 cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
@@ -19,4 +22,20 @@ cortex-m-rt = "0.7.3"
 embedded-hal = "0.2.7"
 panic-probe = { version = "0.3", features = ["print-defmt"] }
 futures = { version = "0.3.28", default-features = false, features = ["async-await"] }
-nrf9160-pac = "0.12.2"
+static_cell = { version = "1.2.0", features = ["nightly"] }
+
+[profile.dev]
+debug = 2
+debug-assertions = true
+incremental = true
+opt-level = 's'
+overflow-checks = true
+
+[profile.release]
+codegen-units = 1
+debug = 2
+debug-assertions = false
+incremental = false
+lto = 'fat'
+opt-level = 's'
+overflow-checks = false
