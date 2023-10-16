@@ -10,18 +10,20 @@ use core::sync::atomic::{compiler_fence, fence, Ordering};
 use defmt::assert_eq;
 use defmt::unwrap;
 use defmt::*;
-use embassy::executor::Spawner;
-use embassy::time::{Duration, Timer};
+use embassy_executor::Spawner;
 use embassy_nrf::gpio::{Level, Output, OutputDrive};
 use embassy_nrf::pac;
 use embassy_nrf::Peripherals;
+use embassy_time::{Duration, Timer};
 use futures::future::pending;
 
 use defmt_rtt as _; // global logger
 use panic_probe as _;
 
-#[embassy::main]
-async fn main(_spawner: Spawner, p: Peripherals) {
+#[embassy_executor::main]
+async fn main(_spawner: Spawner) {
+    let p = embassy_nrf::init(Default::default());
+
     info!("Hello World {:x}", core::mem::size_of::<ControlBlock>());
 
     let mut led = Output::new(p.P0_02, Level::Low, OutputDrive::Standard);
@@ -174,7 +176,7 @@ impl Modem {
 
     fn process(&mut self, list: &mut List) {
         for item in &mut list.items {
-            if item.preamble & 0xFF == 0x01 && item.preamble >> 16 == self.rx_seq_no as _ {
+            if item.preamble & 0xFF == 0x01 && item.preamble >> 16 == self.rx_seq_no as u32 {
                 let msg = unsafe { &mut *item.message };
                 info!("rx msg: {:?}", msg);
 
